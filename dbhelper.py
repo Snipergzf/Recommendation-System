@@ -27,7 +27,7 @@ class dbhelper(object):
 	# 	return self.redis_conn
 	def getRecentUser(self):
 		cur = self.mysql_conn.cursor()
-		sql_str = "SELECT uid FROM OnlineUser"
+		sql_str = "SELECT id FROM User"
 		n = cur.execute(sql_str)
 		if n==0:
 			cur.close()
@@ -49,8 +49,14 @@ class dbhelper(object):
 
 	def getUserFeture(self, uId):
 		userfile = self.mongo_conn.cUser.find_one({"_id": uId})
-		recentFeature = userfile['recentFeature']['vector']
-		pastFeature = userfile['pastFeature']['vector']
+		recentFeature = None
+		pastFeature = None
+		if "recentFeature" in userfile:
+			#return user's recentFeature dict, including vector and time
+			recentFeature = userfile['recentFeature']
+		if "pastFeature" in userfile:
+			#return user's pastFeature dict, including vector and time
+			pastFeature = userfile['pastFeature']
 		return recentFeature, pastFeature
 
 	def getEventVector(self, eventId):
@@ -61,9 +67,15 @@ class dbhelper(object):
 			return self.mongo_conn.cEvent_off.find_one({"_id": eventId})['vector']
 
 	def putUserFeature(self, uId, re_feature, pa_feature):
-		reFile = {"vector":re_feature, "time":int(time.time())}
-		paFile = {"vector":pastFeature, "time":int(time.time())}
-		result = self.mongo_conn.cUser.update({"_id": uId}, {"$set": {"pastFeature":paFile,"recentFeature":reFile}})
+		if re_feature is not None and pa_feature is not None:
+			reFile = {"vector":re_feature, "time":int(time.time())}
+			paFile = {"vector":pastFeature, "time":int(time.time())}
+			result = self.mongo_conn.cUser.update({"_id": uId}, {"$set": {"pastFeature":paFile,"recentFeature":reFile}})
+		elif pa_feature is not None:
+			paFile = {"vector":pastFeature, "time":int(time.time())}
+			result = self.mongo_conn.cUser.update({"_id": uId}, {"$set": {"pastFeature":paFile}}
+		else:
+			pass
 		if result == 1:
 			return True
 		else:

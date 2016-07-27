@@ -2,6 +2,8 @@
 #-*- coding:utf8 -*-
 
 from config import *
+import time
+import math
 
 class algOne(object):
 	"""docstring for algOne"""
@@ -34,20 +36,32 @@ class algOne(object):
 			return None
 		for user in self.userList:
 			re_feature, pa_feature = self.dbhelper.getUserFeture(user)
-			listH = [self.cal_Sim(pa_feature, classVector) for classVector in eventVectorList]
-			arg = sum(listH)/len(listH)
-			#select from listH where the value bigger than averge
-			listG = [i for i, t in enumerate(listH) if t >= arg]
-			listR = []
-			for item in listG:
-				eventList = self.dbhelper.getEventByClass(CATEGORY_LIST[item])
-				#use match function to select recommendation event for user
-				listF = self.match(re_feature, eventList)
-				#put the recommended events in every class togather
-				# listR = list(setR|set(listF))
-				listR += listF
-			self.outputer.matchList_output(uId, listR)
-
+			if re_feature is None and pa_feature is None:
+				pass
+			else:
+				delta = int(time.time())-re_feature["time"] 
+				n = (delta*100)/86400
+				#if re_feature is unexpired
+				if math.abs(n-100) < 30:
+					re_feature = re_feature["vector"]
+					pa_feature = pa_feature["vector"]
+				#if re_feature is expired
+				else:
+					re_feature = pa_feature["vector"]
+					pa_feature = pa_feature["vector"]
+				listH = [self.cal_Sim(pa_feature, classVector) for classVector in eventVectorList]
+				arg = sum(listH)/len(listH)
+				#select from listH where the value bigger than averge
+				listG = [i for i, t in enumerate(listH) if t >= arg]
+				listR = []
+				for item in listG:
+					eventList = self.dbhelper.getEventByClass(CATEGORY_LIST[item])
+					#use match function to select recommendation event for user
+					listF = self.match(re_feature, eventList)
+					#put the recommended events in every class togather
+					# listR = list(setR|set(listF))
+					listR += listF
+				self.outputer.matchList_output(uId, listR)
 
 
 

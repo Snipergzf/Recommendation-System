@@ -33,14 +33,16 @@ class userManager(object):
 		norm  = sum([i*i for i in vector])
 		return [x/norm for x in vector]
 
-	def cal_pastFeature(self, pastFeature):
+	def cal_pastFeature(self, pastFeature, re_feature):
 		detal = pastFeature['time'] - int(time.time())
 		pa_feature = pastFeature['vector']
 		n = (detal*100)/(86400*3)
-		if math.abs(n-100)>10:
+		#the expression following means the interval of two cal_time is more than 3 days
+		if math.abs(n-100)>30:
 			l = self.decay(detal/(86400.0))
-			pa_feature_tmp = [l*i for i in pa_feature['vector']]
-			pa_feature = self.vectorOverlay(pa_feature_tmp,re_feature)
+			pa_feature = [l*i for i in pa_feature['vector']]
+			if re_feature is not None:
+				pa_feature = self.vectorOverlay(pa_feature, re_feature)
 		return pa_feature
 
 	def cal_userFeature(self):
@@ -58,9 +60,12 @@ class userManager(object):
 					#else the user is the fresh man or long time offline, return None
 					re_feature = None
 				if pastFeature is not None:
-					pa_feature = self.cal_pastFeature(pastFeature)
+					pa_feature = self.cal_pastFeature(pastFeature,re_feature)
 				else:
-					pa_feature = None
+					if re_feature is None:
+						pa_feature = None
+					else:
+						pa_feature = re_feature
 				try:
 					self.outputer.user_feature_output(user, re_feature, pa_featureve)
 				except Exception, e:

@@ -8,7 +8,7 @@ from outputer import outputer
 from algOne import algOne
 from producer import producer
 from config import *
-import dbhelper
+from dbhelper import dbhelper
 import threading
 import time
 # from gevent import monkey; monkey.patch_all()
@@ -50,7 +50,7 @@ class mainManager(object):
 				self.algone.alg(self.userList)
 				self.lock1.release()
 				self.lock2.release()
-				time.sleep(INTERVAL/2+random.randint(-100,100))
+				time.sleep(INTERVAL+random.randint(-100,100))
 			time.sleep(INTERVAL_ALG)
 
 
