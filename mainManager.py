@@ -11,6 +11,7 @@ from config import *
 from dbhelper import dbhelper
 import threading
 import time
+import datetime
 # from gevent import monkey; monkey.patch_all()
 # import gevent
 import random
@@ -25,56 +26,62 @@ class mainManager(object):
 		self.uManager = userManager(self.dbhelper, self.outputer)
 		self.pro = producer(self.dbhelper.mongo_conn, self.dbhelper.redis_conn)
 		self.algone = algOne(self.dbhelper, self.outputer)
-		self.userList = []
+		# self.userList = []
 		self.lock1 = threading.Lock()
 		self.lock2 = threading.Lock()
 
 	def eventWorker(self):
 		while True:
-			if self.lock1.acquire()
+			if self.lock1.acquire():
+				print("eventWorker running at %s" % (datetime.datetime.strftime(datetime.datetime.now(),'%Y-%m-%d %H:%M:%S')))
 				self.pro.main()
 				self.eManager.cal_classFeature()
 				self.lock1.release()
+				print("eventWorker finished at %s" % (datetime.datetime.strftime(datetime.datetime.now(),'%Y-%m-%d %H:%M:%S')))
 				time.sleep(INTERVAL+random.randint(-100,100))
 
 	def userWorker(self):
 		while True:
-			if self.lock2.acquire()
+			if self.lock2.acquire():
+				print("userWorker running at %s" % (datetime.datetime.strftime(datetime.datetime.now(),'%Y-%m-%d %H:%M:%S')))
 				self.userList = self.uManager.cal_userFeature()
 				self.lock2.release()
+				print("userWorker finished at %s" % (datetime.datetime.strftime(datetime.datetime.now(),'%Y-%m-%d %H:%M:%S')))
 				time.sleep(INTERVAL+random.randint(-100,100))
 
 	def algWorker(self):
 		while True:
 			if self.lock1.acquire() and self.lock2.acquire():
-				self.algone.alg(self.userList)
+				# self.algone.alg(self.userList)
+				print("algWorker running at %s" % (datetime.datetime.strftime(datetime.datetime.now(),'%Y-%m-%d %H:%M:%S')))
+				self.algone.alg()
 				self.lock1.release()
 				self.lock2.release()
+				print("algWorker finished at %s" % (datetime.datetime.strftime(datetime.datetime.now(),'%Y-%m-%d %H:%M:%S')))
 				time.sleep(INTERVAL+random.randint(-100,100))
 			time.sleep(INTERVAL_ALG)
 
 
-	def main(self):
+if __name__ == '__main__':
+	mainManager = mainManager()
+	while True:
 		try:
 			print('Initializing...')
-			threads = [
-				eventThread = threading.Thread(target=eventWorker, args=()),
-				userThread = threading.Thread(target=userWorker, args=()),
-				algThread = threading.Thread(target=algWorker, args=()),
-			]
+			threads = []
+			eventThread = threading.Thread(target=mainManager.eventWorker, args=())
+			userThread = threading.Thread(target=mainManager.userWorker, args=())
+			algThread = threading.Thread(target=mainManager.algWorker, args=())
+			threads.append(eventThread)
+			threads.append(userThread)
+			threads.append(algThread)
 			for thread in threads:
 				thread.start()
 			for thread in threads:
 				thread.join()
 		except KeyboardInterrupt:
 			print ('Friendly exits.')
-			return None
+			break
 
-
-
-if __name__ == '__main__':
-	mainManager = mainManager()
-	mainManager.main()
 
 
 

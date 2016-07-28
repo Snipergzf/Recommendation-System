@@ -19,14 +19,20 @@ class eventManager(object):
 	def vectorOverlay(self, seq1, seq2):
 		return [seq1[i]+seq2[i] for i in range(len(seq1))]
 
+	def cal_vector(self,oneEvent):
+		self.dbhelper.getEventVector(oneEvent)
+		
 	def cal_classFeature(self):
 		classVectorList = []
 		for i in CATEGORY_LIST:
 			#get the list of the very class of events
 			eventList = self.dbhelper.getEventByClass(i)
 			n = len(eventList)
-			classVector = reduce(self.vectorOverlay(), eventList)
-			if n > 0:
+			if n==1:
+				classVector = self.dbhelper.getEventVector(eventList[0])
+			elif n>1:
+				vectorlist = map(self.cal_vector, eventList)
+				classVector = reduce(self.vectorOverlay(), vectorlist)
 				classVector = [x/n for x in classVector]
 			classVectorList.append(classVector)
 		self.outputer.class_vector_output(classVectorList)

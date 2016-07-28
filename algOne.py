@@ -7,26 +7,24 @@ import math
 
 class algOne(object):
 	"""docstring for algOne"""
-	def __init__(self, dbhelper, outputer, userList):
+	def __init__(self, dbhelper, outputer):
 		self.dbhelper = dbhelper
 		self.outputer = outputer
-		self.userList = UserList
+		self.userList = self.dbhelper.getRecentUser()
 
-	def cal_Sim(self, vector1, vector2):
-		a = sum([vector1[i]*vector2[i] for i in range(len(vector1))])
-		b = math.sqrt(sum([i*i for i in vector1]))
-		c = math.sqrt(sum([i*i for i in vector2]))
+	def cal_Sim(self, userVector, eventVector):
+		a = sum([(userVector[i])*(eventVector[i]) for i in range(len(userVector))])
+		b = math.sqrt(sum([i*i for i in userVector]))
+		c = math.sqrt(sum([i*i for i in eventVector]))
 		return (a/(b*c))
 
-
-	# there is something wrong!!!
 	def match(self, uFeature, eventList):
 		listF = [self.cal_Sim(uFeature, self.dbhelper.getEventVector(event)) for event in eventList]
 		arg = sum(listF)/len(listF)
 		list_to_return = []
 		for index, item in enumerate(listF):
-			if itme >= arg:
-				dict_tmp = {"sim_value" = item, "id" = eventList[index]}
+			if item >= arg:
+				dict_tmp = {"sim_value" : item, "id" : eventList[index]}
 				list_to_return.append(dict_tmp)
 		return list_to_return
 
@@ -42,7 +40,7 @@ class algOne(object):
 				delta = int(time.time())-re_feature["time"] 
 				n = (delta*100)/86400
 				#if re_feature is unexpired
-				if math.abs(n-100) < 30:
+				if math.fabs(n-65) <= 65:
 					re_feature = re_feature["vector"]
 					pa_feature = pa_feature["vector"]
 				#if re_feature is expired
@@ -61,7 +59,7 @@ class algOne(object):
 					#put the recommended events in every class togather
 					# listR = list(setR|set(listF))
 					listR += listF
-				self.outputer.matchList_output(uId, listR)
+				self.outputer.matchList_output(user, listR)
 
 
 
