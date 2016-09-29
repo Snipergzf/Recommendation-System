@@ -16,7 +16,7 @@ class dbhelper(object):
 		self.mongo_conn = conn.core
 		self.mongo_conn.authenticate(MONGO_USER, MONGO_PASSWD)
 		#create redis connection
-		self.redis_conn = redis.StrictRedis(host="localhost", port=6379, db=1)
+		self.redis_conn = redis.StrictRedis(host="localhost", port=6379, db=0)
 
 	# def getMySQLConn(self):
 	# 	return self.mysql_conn
@@ -40,14 +40,15 @@ class dbhelper(object):
 		# return users
 		
 	def getRecentUser(self):
-		r = self.mongo_conn.cUser_test.find({},{"_id":1})
+		r = self.mongo_conn.cUser.find({},{"_id":1})
+		# r = self.mongo_conn.cUser_test.find({},{"_id":1})
 		rList = [i["_id"] for i in r]
 		return rList
 		
 	def getUserRecord(self, uId):
 		pastFeature = None
 		recentRecord = []
-		userfile = self.mongo_conn.cUser_test.find_one({"_id": uId})
+		userfile = self.mongo_conn.cUser.find_one({"_id": uId})
 		if "events" in userfile:
 			recentRecord = [i for i in userfile['events'] if int(i['time']) > (int(time.time())-259200)]
 		if "pastFeature" in userfile:
@@ -57,7 +58,7 @@ class dbhelper(object):
 		return recentRecord, pastFeature
 
 	def getUserFeture(self, uId):
-		userfile = self.mongo_conn.cUser_test.find_one({"_id": uId})
+		userfile = self.mongo_conn.cUser.find_one({"_id": uId})
 		recentFeature = None
 		pastFeature = None
 		if "recentFeature" in userfile:
@@ -69,7 +70,8 @@ class dbhelper(object):
 		return recentFeature, pastFeature
 
 	def getEventVector(self, eventId):
-		event = self.mongo_conn.cEvent_test.find_one({"_id": eventId})
+		event = self.mongo_conn.cEvent.find_one({"_id": eventId})
+		# event = self.mongo_conn.cEvent_test.find_one({"_id": eventId})
 		if event:
 			return event['vector']
 		else:
@@ -79,13 +81,13 @@ class dbhelper(object):
 		if re_feature is not None and pa_feature is not None:
 			reFile = {"vector":re_feature, "time":int(time.time())}
 			paFile = {"vector":pa_feature, "time":int(time.time())}
-			result = self.mongo_conn.cUser_test.update({"_id": uId}, {"$set": {"pastFeature":paFile,"recentFeature":reFile}})
+			result = self.mongo_conn.cUser.update({"_id": uId}, {"$set": {"pastFeature":paFile,"recentFeature":reFile}})
 		elif pa_feature is not None and re_feature is None:
 			paFile = {"vector":pa_feature, "time":int(time.time())}
-			result = self.mongo_conn.cUser_test.update({"_id": uId}, {"$set": {"pastFeature":paFile}})
+			result = self.mongo_conn.cUser.update({"_id": uId}, {"$set": {"pastFeature":paFile}})
 		elif re_feature is not None and pa_feature is None:
 			reFile = {"vector":re_feature, "time":int(time.time())}
-			result = self.mongo_conn.cUser_test.update({"_id": uId}, {"$set": {"recentFeature":reFile}})
+			result = self.mongo_conn.cUser.update({"_id": uId}, {"$set": {"recentFeature":reFile}})
 		if result == 1:
 			return True
 		else:
@@ -110,19 +112,35 @@ class dbhelper(object):
 		return None
 
 	def putRecommendedList(self, uId, rList):
-		result = self.mongo_conn.cUser_test.update({"_id": uId}, {"$set": {"recommend":rList, "count":len(rList), "re_time":int(time.time())}})
+		result = self.mongo_conn.cUser.update({"_id": uId}, {"$set": {"recommend":rList, "count":len(rList), "re_time":int(time.time())}})
 		if result != 1:
 			return False
 		else:
 			return True
+
+	def getEvents(self):
+		eventsList = []
+		events_cursor = self.mongo_conn.cEvent.find({}, {"cEvent_content":1, "vector":1})
+		for event_cursor in events_cursor:
+			if "vector" not in event_cursor:
+				eventsList.append((event_cursor["_id"],event_cursor["cEvent_content"]))
+		return eventsList
+
+	def putEventFeature(self, eventId, eFeature):
+		result = self.mongo_conn.cEvent.update({"_id":eventId},{"$set":{"vector":eFeature}})
+		if result != 1:
+			return False
+		else:
+			return True
+
 			
 if __name__ == '__main__':
 	test = dbhelper()
-	users = test.getUserRecentRecord()
-	if users is not None:
-		print len(users)
-		for i in users:
-			print i
+	# users = test.getUserRecentRecord()
+	# if users is not None:
+	# 	print len(users)
+	# 	for i in users:
+	# 		print i
 
 
 

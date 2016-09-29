@@ -121,6 +121,7 @@ class DataChange(object):
 		while True:
 			try:
 				print("start...")
+				time_count = time.time()
 				threads = []
 				consumerThread1= threading.Thread(target=self.consumer)
 				consumerThread2= threading.Thread(target=self.consumer)
@@ -134,8 +135,10 @@ class DataChange(object):
 				threads.append(producerThread)
 				for thread in threads:
 					thread.join()
+				delta = time.time()-time_count
 				print ("there are %d null doc"%(self.null_count))
 				print ("there are %d docs have content"%(self.doc_count))
+				print ("it costs %f seconds to run"%(delta))
 				print("exit.")
 				break
 			except KeyboardInterrupt:

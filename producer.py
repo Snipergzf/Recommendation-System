@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # -*- coding:utf-8 -*-
 # from pymongo import MongoClient
 from pymongo import ASCENDING 
@@ -34,7 +35,7 @@ class producer(object):
 		self.r.delete("newEvents")
 		for index, item in enumerate(id_list):
 			self.r.zadd("all", float(index+0.5), item['_id'])
-			if item['cEvent_publish'] > self.update_time:
+			if int(item['cEvent_publish']) > self.update_time:
 				self.r.zadd("newEvents", float(index+0.5), item['_id'])
 
 
@@ -67,11 +68,11 @@ class producer(object):
 		return result
 
 	def main(self):
-		print("running at %s" % (datetime.datetime.strftime(datetime.datetime.now(),'%Y-%m-%d %H:%M:%S')))
+		print("producer running at %s" % (datetime.datetime.strftime(datetime.datetime.now(),'%Y-%m-%d %H:%M:%S')))
 		self.post_events()
 		self.remove_expired()
 		self.get_category()
-		print("finished at %s" % (datetime.datetime.strftime(datetime.datetime.now(),'%Y-%m-%d %H:%M:%S')))
+		print("producer finished at %s" % (datetime.datetime.strftime(datetime.datetime.now(),'%Y-%m-%d %H:%M:%S')))
 		self.update_time = int(time.time())
 			
 

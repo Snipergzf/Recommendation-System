@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import json
 from config import *
+from LDATrainner import LDATrainner
 
 class eventManager(object):
 	"""docstring for eventManager"""
@@ -36,3 +37,14 @@ class eventManager(object):
 				classVector = [x/n for x in classVector]
 			classVectorList.append(classVector)
 		self.outputer.class_vector_output(classVectorList)
+
+
+	def cal_event_Feature(self):
+		events = self.dbhelper.getEvents()
+		ldaTrainner = LDATrainner("search_dim_trainner",100)
+		if ldaTrainner.ldaModel==None or ldaTrainner.dic==None:
+				ldaTrainner.train()
+		for event in events:
+			event_feature = ldaTrainner.getLdaDistribution(event[1])
+			self.outputer.event_feature_put(event[0], event_feature)
+

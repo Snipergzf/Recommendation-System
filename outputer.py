@@ -35,6 +35,11 @@ class outputer(object):
 			user_data["recom"] = data
 			self.mongoConn.cUser.update({"_id":user},user_data)
 
+	def event_feature_put(self, eventId, e_feature):
+		if self.dbhelper.putEventFeature(eventId, e_feature):
+			return True
+		else:
+			return False
 
 	# """reverse the event-user matrix to user_event matrix"""
 	# def reverse(self):
